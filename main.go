@@ -7,35 +7,41 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
+
+// custom middleware
+func customMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// tambah logic... (login, autentikasi, etc...)
+		fmt.Println("eitss.. tidak semudah itu ferguso")
+		// panggil next handler
+		c.Next()
+	}
+}
 
 func main() {
 	// buat sebuah router gin baru
 	r := gin.Default()
 
-	// buat sebuah router group "/api/v1"
-	apiRoutes := r.Group("/api/v1")
+	// pakai custom middleware di main router
+	r.Use(customMiddleware())
 
-	// definisikan routes yang termasuk ke dalam group /api/v1
-	apiRoutes.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"message": "Hello from GET /api/v1"})
+	r.GET("/", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{"message": "gokil"})
 	})
 
-	apiRoutes.POST("/users", func(ctx *gin.Context) {
-		var requestBody struct {
-			FirstName string `json:"first_name"`
-			LastName string `json:"last_name"`
-		}
-		err := ctx.ShouldBindJSON(&requestBody)
+	// definisikan router group /api/v1
+	apiGroup := r.Group("/api/v1")
 
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		}
+	// pakai middleware untuk router group
+	apiGroup.Use(customMiddleware())
 
-		ctx.JSON(http.StatusCreated, gin.H{"code": "01", "status": "created", "message": "user created", "data": requestBody})
+	// definisikan routes di dalam /api/v1
+	apiGroup.GET("/", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{"message": "mantap"})
 	})
 
 	// jalankan server
