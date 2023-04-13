@@ -7,7 +7,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,18 +16,26 @@ func main() {
 	// buat sebuah router gin baru
 	r := gin.Default()
 
-	// definisikan routes
-	r.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"message": "Hello, world!"})
+	// buat sebuah router group "/api/v1"
+	apiRoutes := r.Group("/api/v1")
+
+	// definisikan routes yang termasuk ke dalam group /api/v1
+	apiRoutes.GET("/", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{"message": "Hello from GET /api/v1"})
 	})
 
-	r.GET("/hello/:name", func(ctx *gin.Context) {
-		name := ctx.Param("name")
-		ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Hello, %s", name)})
-	})
+	apiRoutes.POST("/users", func(ctx *gin.Context) {
+		var requestBody struct {
+			FirstName string `json:"first_name"`
+			LastName string `json:"last_name"`
+		}
+		err := ctx.ShouldBindJSON(&requestBody)
 
-	r.POST("/hai", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"message": "Hai, world!"})
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+
+		ctx.JSON(http.StatusCreated, gin.H{"code": "01", "status": "created", "message": "user created", "data": requestBody})
 	})
 
 	// jalankan server
